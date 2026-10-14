@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plant Database Preview</title>
+<style>
+:root{
+  --bg:#f6f5f0; --surface:#ffffff; --text:#22261f; --muted:#6b705f; --line:#dcdbd1;
+  --accent:#3f6b3a; --accent-soft:#e3eddc; --chip:#eceae0;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171a15; --surface:#20241c; --text:#e8eadf; --muted:#a2a894; --line:#363b2e;
+    --accent:#8fc283; --accent-soft:#2a3524; --chip:#2b3024;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171a15; --surface:#20241c; --text:#e8eadf; --muted:#a2a894; --line:#363b2e;
+  --accent:#8fc283; --accent-soft:#2a3524; --chip:#2b3024;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.45}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:1.6rem;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 18px;font-size:.95rem}
+.banner{background:var(--accent-soft);border:1px solid var(--line);border-radius:10px;
+  padding:10px 14px;font-size:.88rem;margin-bottom:18px}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--surface);color:var(--text);
+  padding:8px 14px;border-radius:999px;cursor:pointer;font-size:.9rem}
+.tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.panel{display:none}.panel.on{display:block}
+.filters{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
+.filters input[type=search]{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg);color:var(--text);font-size:1rem;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted)}
+.field select{padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:.9rem}
+.check{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--text)}
+.count{color:var(--muted);font-size:.85rem;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.top{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.dot{width:46px;height:46px;border-radius:50%;flex:none;border:1px solid var(--line)}
+.bn{font-style:italic;font-weight:600;font-size:.98rem}
+.cn{color:var(--muted);font-size:.85rem}
+.facts{font-size:.85rem;margin:0;padding:0;list-style:none}
+.facts li{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-top:1px dashed var(--line)}
+.facts li span:first-child{color:var(--muted)}
+.facts li span:last-child{text-align:right}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.tag{background:var(--chip);border-radius:999px;padding:2px 9px;font-size:.75rem}
+.tag.g{background:var(--accent-soft);color:var(--accent)}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.photos{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.ph{aspect-ratio:1/1;border:1.5px dashed var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:.62rem;line-height:1.15;color:var(--muted);padding:4px;background:var(--bg)}
+.ph.bloomc{border-style:solid;border-color:var(--line);color:#fff;text-shadow:0 0 3px rgba(0,0,0,.55)}
+.note{font-size:.82rem;color:var(--muted);margin:0 0 10px}
+.savebar{margin-top:10px}
+.savebtn{border:1px solid var(--accent);background:transparent;color:var(--accent);padding:6px 14px;border-radius:999px;cursor:pointer;font-size:.85rem}
+.savebtn.on{background:var(--accent);color:#fff}
+.pop{margin-top:8px;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px;font-size:.85rem}
+.pop label{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer}
+.pop .sep{border-top:1px dashed var(--line);margin:6px 0}
+.newp{display:flex;gap:8px;margin:6px 0}
+.newp input{flex:1;min-width:0;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:.85rem}
+.mini{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:.78rem}
+.slist{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.shead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:2px}
+.srow{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px dashed var(--line);font-size:.88rem}
+.sdot{width:20px;height:20px;border-radius:50%;flex:none;border:1px solid var(--line)}
+.stx{flex:1;min-width:0}
+.ben{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:12px}
+.bcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.bcard h3{margin:0 0 2px;font-size:1rem}
+.bcard svg{width:100%;height:auto;display:block;margin-top:6px}
+.ill{background:var(--accent-soft);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.85rem;margin-bottom:12px}
+.src{font-size:.78rem;color:var(--muted);margin-top:8px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.role{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.88rem;margin-bottom:14px}
+.role select{padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:.88rem}
+.chartbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
+table.bloom{border-collapse:collapse;min-width:640px;width:100%;font-size:.8rem}
+.bloom th{font-weight:500;color:var(--muted);padding:4px 2px;text-align:center}
+.bloom th.l,.bloom td.l{text-align:left;padding-right:10px;white-space:nowrap}
+.bloom td{padding:3px 1px;height:26px}
+.bloom td.m{background:var(--chip);border:2px solid var(--surface)}
+.bloom td.on{border:2px solid var(--surface)}
+.bloom .sci{font-style:italic;color:var(--muted);font-size:.75rem}
+.explain h2{font-size:1.1rem;margin:22px 0 6px}
+.explain p{margin:6px 0}
+.map{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-top:10px}
+.mapcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:.88rem}
+.mapcard b{display:block;margin-bottom:4px}
+.mapcard small{color:var(--muted)}
+.sheet{width:100%;border-collapse:collapse;font-size:.82rem;background:var(--surface);border:1px solid var(--line);margin:8px 0;display:block;overflow-x:auto}
+.sheet th,.sheet td{border:1px solid var(--line);padding:5px 8px;text-align:left;white-space:nowrap}
+.sheet th{background:var(--chip)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Plant Database Preview</h1>
+  <p class="sub">A mock-up of the kind of search page a plant database can power.</p>
+  <div class="banner"><b>Placeholder data.</b> These 12 plants and their details are sample entries to show how the page works. Verify before treating any of it as real.</div>
+
+  <div class="tabs">
+    <button class="tab on" data-p="search">Search plants</button>
+    <button class="tab" data-p="bloom">Bloom chart</button>
+    <button class="tab" data-p="saved">Saved lists</button>
+    <button class="tab" data-p="benefits">Benefits</button>
+    <button class="tab" data-p="how">How it works</button>
+  </div>
+
+  <section class="panel on" id="search">
+    <div class="filters">
+      <input type="search" id="q" placeholder="Search by botanical or common name...">
+      <div class="row">
+        <label class="field">Plant type<select id="fType"><option value="">Any</option></select></label>
+        <label class="field">Sun<select id="fSun"><option value="">Any</option></select></label>
+        <label class="field">Soil moisture<select id="fMoist"><option value="">Any</option></select></label>
+        <label class="field">Hardiness zone<select id="fZone"><option value="">Any</option></select></label>
+        <label class="check"><input type="checkbox" id="fDeer"> Deer resistant</label>
+        <label class="check"><input type="checkbox" id="fBio"> Bioswale suitable</label>
+      </div>
+    </div>
+    <p class="note">The dashed circles are photo slots. Each plant can hold photos of the whole plant, leaves, flowers, fruit, bark, and fall color. The bloom-color circle is filled from the data.</p>
+    <p class="count" id="count"></p>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="panel" id="bloom">
+    <p class="sub">Built automatically from each plant's bloom start month, end month, and color. Plants that don't flower are left off. Respects whatever filters you set on the Search tab.</p>
+    <div class="chartbox"><table class="bloom" id="bloomTable"></table></div>
+  </section>
+
+  <section class="panel" id="benefits">
+    <p class="sub">What a tree does for a site as it grows. Pick a tree to see both charts.</p>
+    <div class="ill" id="benNote"></div>
+    <label class="field" style="max-width:240px"><span>Tree</span><select id="benTree"></select></label>
+    <div class="ben">
+      <div class="bcard"><h3 id="benT1">Carbon stored in the tree</h3><div class="cn" id="benS1">Rises as the tree grows</div>
+        <div id="benCarbon"></div>
+        <div class="src" id="benCarbonSrc"></div></div>
+      <div class="bcard"><h3 id="benT2">Stormwater runoff from the site</h3><div class="cn" id="benS2">With and without the tree</div>
+        <div id="benRunoff"></div>
+        <div class="legend" id="benLegend"><span><i style="border-color:var(--muted);border-top-style:dashed"></i>Without the tree</span><span><i style="border-color:var(--accent)"></i>With the tree</span></div>
+        <div class="src" id="benRunoffSrc"></div></div>
+    </div>
+  </section>
+
+  <section class="panel" id="saved">
+    <p class="note">Try it: press Save on any plant card and choose the firm master list or a project. In this preview, saves are kept only in your own browser. In the real database they'd be shared by the whole firm.</p>
+    <div class="newp"><input id="newProj" placeholder="New project name..."><button class="mini" id="addProj">Add project</button></div>
+    <div id="savedBody"></div>
+  </section>
+
+  <section class="panel explain" id="how">
+    <h2>What you're looking at</h2>
+    <p>Every plant is one row in the database. The search page just reads those rows and shows them as cards. Change a value in the database and the page updates, with nothing to retype in a layout.</p>
+
+    <h2>The tables, in plain English</h2>
+    <p>The database is a set of tables, like tabs in an Excel workbook, that point to each other:</p>
+    <div class="map">
+      <div class="mapcard"><b>plant</b>The main list. One row per plant: names, height, spread, zones, bloom months, bloom color, yes/no flags.<br><small>Like your "Database" sheet.</small></div>
+      <div class="mapcard"><b>Lookup tables</b>The allowed choices: plant types, sun levels, soil moisture levels, landscape uses.<br><small>Like the dropdown lists behind a data-entry form. They stop "Full Sun" from also being typed "full sun" or "FS".</small></div>
+      <div class="mapcard"><b>Link tables</b>Connect a plant to several choices at once. "Part Shade" and "Full Sun" can both belong to one plant.<br><small>This replaces cramming "clay, loam, sand" into one cell.</small></div>
+      <div class="mapcard"><b>plant_image + image_type</b>Photo file names, plus what each photo shows (whole plant, leaf, flower, fruit, bark, fall color), its credit, and its license.<br><small>A palette layout asks for "the primary flower photo" and gets the right file for each plant.</small></div>
+      <div class="mapcard"><b>firm_saved_plant, project, project_plant</b>The Save feature. One table holds the firm master list, and each project has its own saved list.<br><small>Saving is just adding a row. Removing a plant from one project doesn't touch the others or the main plant list.</small></div>
+      <div class="mapcard"><b>vendor</b>An empty placeholder for a later phase.<br><small>So suppliers can connect to plants later.</small></div>
+    </div>
+
+    <h2>One plant, as spreadsheet rows</h2>
+    <p>Rudbeckia fulgida, split across tables:</p>
+    <table class="sheet"><tr><th colspan="5">plant</th></tr>
+      <tr><th>plant_id</th><th>botanical_name</th><th>common_name</th><th>bloom_start_month</th><th>bloom_end_month</th></tr>
+      <tr><td>1</td><td>Rudbeckia fulgida</td><td>Orange Coneflower</td><td>7</td><td>10</td></tr></table>
+    <table class="sheet"><tr><th colspan="2">plant_sun_exposure (link table)</th></tr>
+      <tr><th>plant_id</th><th>sun_exposure_id</th></tr>
+      <tr><td>1</td><td>1 (Full Sun)</td></tr>
+      <tr><td>1</td><td>2 (Part Shade)</td></tr></table>
+    <p>The same plant shows up twice in the link table because it tolerates two sun conditions. That's what lets the search filter find it under either one.</p>
+  </section>
+</div>
+
+<script>
+// PLACEHOLDER sample data. h/s = inches. bs/be = bloom start/end month (1-12).
+var PLANTS=[
+{b:"Rudbeckia fulgida",c:"Orange Coneflower",t:"Perennial",hmin:24,hmax:36,smin:18,smax:24,z:[3,9],sun:["Full Sun","Part Shade"],m:["Medium","Moist"],deer:1,bio:1,bs:7,be:10,col:"#F2C200",use:["Pollinator Habitat","Rain Garden"]},
+{b:"Schizachyrium scoparium",c:"Little Bluestem",t:"Grass",hmin:24,hmax:48,smin:12,smax:24,z:[3,9],sun:["Full Sun"],m:["Dry","Medium"],deer:1,bio:1,bs:null,be:null,col:"#B8855A",use:["Erosion Control","Bioretention"]},
+{b:"Echinacea purpurea",c:"Purple Coneflower",t:"Perennial",hmin:24,hmax:48,smin:18,smax:24,z:[3,9],sun:["Full Sun","Part Shade"],m:["Dry","Medium"],deer:0,bio:1,bs:6,be:9,col:"#B5538C",use:["Pollinator Habitat"]},
+{b:"Asclepias incarnata",c:"Swamp Milkweed",t:"Perennial",hmin:36,hmax:60,smin:24,smax:36,z:[3,9],sun:["Full Sun"],m:["Moist","Wet"],deer:1,bio:1,bs:6,be:8,col:"#D96A8C",use:["Pollinator Habitat","Rain Garden","Bioretention"]},
+{b:"Panicum virgatum",c:"Switchgrass",t:"Grass",hmin:36,hmax:72,smin:24,smax:36,z:[3,9],sun:["Full Sun","Part Shade"],m:["Dry","Medium","Moist","Wet"],deer:1,bio:1,bs:null,be:null,col:"#C9A66B",use:["Erosion Control","Screening","Bioretention"]},
+{b:"Iris versicolor",c:"Blue Flag Iris",t:"Perennial",hmin:24,hmax:36,smin:12,smax:24,z:[3,9],sun:["Full Sun","Part Shade"],m:["Moist","Wet"],deer:1,bio:1,bs:5,be:6,col:"#6A5ACD",use:["Rain Garden","Bioretention"]},
+{b:"Symphyotrichum novae-angliae",c:"New England Aster",t:"Perennial",hmin:36,hmax:60,smin:24,smax:36,z:[4,8],sun:["Full Sun"],m:["Medium","Moist"],deer:0,bio:0,bs:8,be:10,col:"#7B4FA8",use:["Pollinator Habitat"]},
+{b:"Monarda didyma",c:"Scarlet Bee Balm",t:"Perennial",hmin:24,hmax:48,smin:18,smax:36,z:[4,9],sun:["Full Sun","Part Shade"],m:["Moist"],deer:1,bio:0,bs:6,be:8,col:"#C8323C",use:["Pollinator Habitat"]},
+{b:"Carex pensylvanica",c:"Pennsylvania Sedge",t:"Grass",hmin:6,hmax:12,smin:12,smax:18,z:[3,8],sun:["Part Shade","Shade"],m:["Dry","Medium"],deer:1,bio:0,bs:null,be:null,col:"#7FA35C",use:["Erosion Control"]},
+{b:"Liatris spicata",c:"Blazing Star",t:"Perennial",hmin:24,hmax:48,smin:12,smax:18,z:[3,9],sun:["Full Sun"],m:["Medium","Moist"],deer:1,bio:1,bs:7,be:8,col:"#A0369D",use:["Pollinator Habitat","Rain Garden"]},
+{b:"Acer rubrum",c:"Red Maple",t:"Tree",hmin:480,hmax:720,smin:360,smax:600,z:[3,9],sun:["Full Sun","Part Shade"],m:["Medium","Moist","Wet"],deer:0,bio:1,bs:3,be:4,col:"#B5372B",use:["Shade Tree","Rain Garden"]},
+{b:"Ginkgo biloba",c:"Ginkgo",t:"Tree",hmin:600,hmax:960,smin:360,smax:480,z:[3,8],sun:["Full Sun","Part Shade"],m:["Medium"],deer:1,bio:0,bs:null,be:null,col:"#E3C94A",use:["Shade Tree"]}
+];
+var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var MORDER={"Dry":1,"Medium":2,"Moist":3,"Wet":4};
+
+function ftin(n){ // inches -> readable
+  if(n<12) return n+" in";
+  var ft=Math.floor(n/12), r=n%12;
+  return r? ft+" ft "+r+" in" : ft+" ft";
+}
+function rng(a,b,f){return a===b? f(a) : f(a)+" to "+f(b)}
+function el(id){return document.getElementById(id)}
+
+// fill dropdowns from the data
+function fill(id,vals){var s=el(id);vals.forEach(function(v){var o=document.createElement("option");o.value=v;o.textContent=v;s.appendChild(o)})}
+var types=[...new Set(PLANTS.map(p=>p.t))].sort();
+var suns=["Full Sun","Part Shade","Shade"];
+var moists=["Dry","Medium","Moist","Wet"];
+var zones=[]; for(var z=3;z<=9;z++) zones.push(String(z));
+fill("fType",types);fill("fSun",suns);fill("fMoist",moists);fill("fZone",zones);
+
+function filtered(){
+  var q=el("q").value.trim().toLowerCase();
+  var t=el("fType").value,s=el("fSun").value,m=el("fMoist").value,z=el("fZone").value;
+  var deer=el("fDeer").checked,bio=el("fBio").checked;
+  return PLANTS.filter(function(p){
+    if(q && (p.b+" "+p.c).toLowerCase().indexOf(q)<0) return false;
+    if(t && p.t!==t) return false;
+    if(s && p.sun.indexOf(s)<0) return false;
+    if(m && p.m.indexOf(m)<0) return false;
+    if(z && !(p.z[0]<=+z && +z<=p.z[1])) return false;
+    if(deer && !p.deer) return false;
+    if(bio && !p.bio) return false;
+    return true;
+  });
+}
+
+function render(){
+  var list=filtered();
+  el("count").textContent=list.length+" of "+PLANTS.length+" plants";
+  var g=el("grid"); g.innerHTML="";
+  if(!list.length){g.innerHTML='<div class="empty">No plants match those filters. Try loosening one.</div>';}
+  list.forEach(function(p){
+    var d=document.createElement("div");d.className="card";
+    var bloom=p.bs? MONTHS[p.bs-1]+" to "+MONTHS[p.be-1] : "Not showy";
+    var tags=p.use.map(u=>'<span class="tag g">'+u+'</span>');
+    if(p.deer) tags.push('<span class="tag">Deer resistant</span>');
+    if(p.bio) tags.push('<span class="tag">Bioswale suitable</span>');
+    var photos='<div class="photos"><div class="ph">Whole plant<br>photo</div><div class="ph">Leaf<br>photo</div><div class="ph">Flower / fruit<br>photo</div><div class="ph bloomc" style="background:'+p.col+'">Bloom<br>color</div></div>';
+    d.innerHTML=photos+
+      '<div class="top"><div class="dot" style="background:'+p.col+'"></div><div><div class="bn">'+p.b+'</div><div class="cn">'+p.c+' - '+p.t+'</div></div></div>'+
+      '<ul class="facts">'+
+      '<li><span>Height</span><span>'+rng(p.hmin,p.hmax,ftin)+'</span></li>'+
+      '<li><span>Spread</span><span>'+rng(p.smin,p.smax,ftin)+'</span></li>'+
+      '<li><span>Zones</span><span>'+p.z[0]+" to "+p.z[1]+'</span></li>'+
+      '<li><span>Sun</span><span>'+p.sun.join(", ")+'</span></li>'+
+      '<li><span>Soil moisture</span><span>'+p.m.join(", ")+'</span></li>'+
+      '<li><span>Bloom</span><span>'+bloom+'</span></li>'+
+      '<li><span>Carbon estimate</span><span>None recorded yet</span></li></ul>'+
+      '<div class="tags">'+tags.join("")+'</div>'+
+      '<div class="savebar"></div>';
+    buildSave(d.querySelector(".savebar"),p,false);
+    g.appendChild(d);
+  });
+  renderBloom(list);
+}
+
+function renderBloom(list){
+  var rows=list.filter(p=>p.bs).sort((a,b)=>a.bs-b.bs||a.be-b.be);
+  var h='<tr><th class="l">Plant</th>'+MONTHS.map(m=>'<th>'+m+'</th>').join("")+'</tr>';
+  if(!rows.length) h+='<tr><td class="l" colspan="13">No flowering plants in the current results.</td></tr>';
+  rows.forEach(function(p){
+    h+='<tr><td class="l">'+p.c+'<br><span class="sci">'+p.b+'</span></td>';
+    for(var m=1;m<=12;m++){
+      var on=p.bs<=m && m<=p.be;
+      h+= on? '<td class="on" style="background:'+p.col+'"></td>' : '<td class="m"></td>';
+    }
+    h+='</tr>';
+  });
+  el("bloomTable").innerHTML=h;
+}
+
+["q","fType","fSun","fMoist","fZone","fDeer","fBio"].forEach(function(id){
+  el(id).addEventListener(id==="q"?"input":"change",render);
+});
+document.querySelectorAll(".tab").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+    document.querySelectorAll(".panel").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); el(b.dataset.p).classList.add("on");
+  });
+});
+// ---------- Save feature (preview: stored in this browser only) ----------
+var KEY="plantPreviewSaves";
+var SAVES={firm:[],projects:{"Rain Garden Retrofit":[],"Courtyard Renovation":[]}};
+try{
+  var raw=localStorage.getItem(KEY);
+  if(raw){var o=JSON.parse(raw); if(o&&Array.isArray(o.firm)&&o.projects&&typeof o.projects==="object") SAVES=o;}
+}catch(e){}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(SAVES))}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function isIn(list,n){return list.indexOf(n)>=0}
+function toggle(list,n){var i=list.indexOf(n); if(i>=0) list.splice(i,1); else list.push(n)}
+function addProject(name){
+  name=(name||"").trim().slice(0,60);
+  if(!name) return null;
+  if(!Object.prototype.hasOwnProperty.call(SAVES.projects,name)) SAVES.projects[name]=[];
+  persist(); return name;
+}
+function savedCount(p){
+  var n=isIn(SAVES.firm,p.b)?1:0;
+  Object.keys(SAVES.projects).forEach(function(k){if(isIn(SAVES.projects[k],p.b)) n++});
+  return n;
+}
+function opt(label,checked,fn){
+  var l=document.createElement("label");
+  var c=document.createElement("input");c.type="checkbox";c.checked=checked;c.onchange=fn;
+  var s=document.createElement("span");s.textContent=label;
+  l.appendChild(c);l.appendChild(s);return l;
+}
+function buildSave(box,p,open){
+  box.innerHTML="";
+  var n=savedCount(p);
+  var btn=document.createElement("button");
+  btn.className="savebtn"+(n?" on":"");
+  btn.textContent=n?"Saved ("+n+")":"Save";
+  btn.onclick=function(){buildSave(box,p,!open)};
+  box.appendChild(btn);
+  if(!open) return;
+  var pop=document.createElement("div");pop.className="pop";
+  function changed(){persist();buildSave(box,p,true);renderSaved();}
+  pop.appendChild(opt("Firm master list",isIn(SAVES.firm,p.b),function(){toggle(SAVES.firm,p.b);changed()}));
+  var sep=document.createElement("div");sep.className="sep";pop.appendChild(sep);
+  Object.keys(SAVES.projects).forEach(function(k){
+    pop.appendChild(opt(k,isIn(SAVES.projects[k],p.b),function(){toggle(SAVES.projects[k],p.b);changed()}));
+  });
+  var row=document.createElement("div");row.className="newp";
+  var inp=document.createElement("input");inp.placeholder="New project...";
+  var add=document.createElement("button");add.className="mini";add.textContent="Add + save";
+  add.onclick=function(){var k=addProject(inp.value); if(k){ if(!isIn(SAVES.projects[k],p.b)) SAVES.projects[k].push(p.b); changed(); }};
+  row.appendChild(inp);row.appendChild(add);pop.appendChild(row);
+  box.appendChild(pop);
+}
+function renderSaved(){
+  var body=el("savedBody"); body.innerHTML="";
+  function section(title,sub,names,onRemove,onDelete){
+    var s=document.createElement("div");s.className="slist";
+    var h=document.createElement("div");h.className="shead";
+    var t=document.createElement("b");t.textContent=title+" ("+names.length+")";h.appendChild(t);
+    if(onDelete){var x=document.createElement("button");x.className="mini";x.textContent="Delete project";x.onclick=onDelete;h.appendChild(x);}
+    s.appendChild(h);
+    if(sub){var sp=document.createElement("div");sp.className="cn";sp.textContent=sub;s.appendChild(sp);}
+    if(!names.length){var e=document.createElement("div");e.className="cn";e.style.padding="8px 0";e.textContent="Nothing saved yet.";s.appendChild(e);}
+    names.forEach(function(n){
+      var p=PLANTS.filter(function(x){return x.b===n})[0]; if(!p) return;
+      var r=document.createElement("div");r.className="srow";
+      var d=document.createElement("span");d.className="sdot";d.style.background=p.col;
+      var tx=document.createElement("span");tx.className="stx";
+      tx.innerHTML="<b>"+esc(p.c)+"</b> <i>"+esc(p.b)+"</i>";
+      r.appendChild(d);r.appendChild(tx);
+      if(onRemove){
+        var rm=document.createElement("button");rm.className="mini";rm.textContent="Remove";
+        rm.onclick=function(){onRemove(n)};
+        r.appendChild(rm);
+      }
+      s.appendChild(r);
+    });
+    body.appendChild(s);
+  }
+  section("Firm master list","Plants the firm has approved or flagged as go-to choices.",SAVES.firm,
+    function(n){toggle(SAVES.firm,n);persist();renderSaved();render();},null);
+  Object.keys(SAVES.projects).forEach(function(k){
+    section("Project: "+k,"",SAVES.projects[k],
+      function(n){toggle(SAVES.projects[k],n);persist();renderSaved();render();},
+      function(){delete SAVES.projects[k];persist();renderSaved();render();});
+  });
+}
+el("addProj").addEventListener("click",function(){
+  var k=addProject(el("newProj").value); if(k){el("newProj").value="";renderSaved();render();}
+});
+// ---------- Benefits mock-up (ILLUSTRATIVE curves, not data) ----------
+function growthCurve(t,k,t0){
+  var f=function(x){return 1/(1+Math.exp(-k*(x-t0)))};
+  return (f(t)-f(0))/(f(50)-f(0));
+}
+var BEN={"Acer rubrum":{k:0.13,t0:16},"Ginkgo biloba":{k:0.09,t0:26}};
+function svgChart(series){
+  var W=320,H=220,L=40,R=12,T=14,B=36,pw=W-L-R,ph=H-T-B;
+  function X(t){return L+pw*t/50}
+  function Y(v){return T+ph*(1-v)}
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Illustrative chart, not real data">';
+  s+='<line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(T+ph)+'" style="stroke:var(--line);stroke-width:1.5"/>';
+  s+='<line x1="'+L+'" y1="'+(T+ph)+'" x2="'+(L+pw)+'" y2="'+(T+ph)+'" style="stroke:var(--line);stroke-width:1.5"/>';
+  for(var t=0;t<=50;t+=10){
+    s+='<text x="'+X(t)+'" y="'+(T+ph+14)+'" text-anchor="middle" font-size="10" style="fill:var(--muted)">'+t+'</text>';
+  }
+  s+='<text x="'+(L+pw/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="10" style="fill:var(--muted)">Years after planting</text>';
+  s+='<text x="'+(L-6)+'" y="'+(T+8)+'" text-anchor="end" font-size="10" style="fill:var(--muted)">More</text>';
+  s+='<text x="'+(L-6)+'" y="'+(T+ph)+'" text-anchor="end" font-size="10" style="fill:var(--muted)">Less</text>';
+  series.forEach(function(se){
+    var d="";
+    for(var t=0;t<=50;t+=2){d+=(t?"L":"M")+X(t).toFixed(1)+" "+Y(se.f(t)).toFixed(1)+" ";}
+    s+='<path d="'+d+'" fill="none" style="stroke:'+se.color+';stroke-width:2.5'+(se.dash?';stroke-dasharray:5 4':'')+'"/>';
+  });
+  return s+'</svg>';
+}
+// ---------- Sourced values (only entries here are shown as real data) ----------
+// McPherson et al. 2005, Piedmont Community Tree Guide, USDA Forest Service.
+// Representative large tree (red maple), public site, per tree planted, mortality included.
+// Modeled from Charlotte NC growth curves: first-order approximations.
+var GUIDE='McPherson et al. 2005, <a href="https://urbanforestrysouth.org/resources/library/citations/piedmont-community-tree-guide-benefits-costs-and-strategic-planting" target="_blank" rel="noopener">Piedmont Community Tree Guide</a>, USDA Forest Service';
+var SOURCED={
+  "Acer rubrum":{
+    who:"Red maple is the guide's representative large tree, shown here for a public (street or park) site, per tree planted, with mortality included.",
+    carbon:{unit:"lb CO2 per year, net",pts:[["Year 20",247,"Table 2, p. 34"],["40-year average",340,"Table 4, p. 41"]]},
+    water:{unit:"gal of rainfall intercepted per year",pts:[["Year 20",3067,"Table 2, p. 34"],["40-year average",4778,"p. 36 and Table 4"]]}
+  }
+};
+function barChart(pts,yLabel,xLabel){
+  var W=320,H=240,L=64,R=12,T=18,B=56,pw=W-L-R,ph=H-T-B;
+  var max=Math.max.apply(null,pts.map(function(p){return p[1]}));
+  var mag=Math.pow(10,Math.floor(Math.log10(max)));
+  var top=Math.ceil(max/mag)*mag;
+  function Y(v){return T+ph*(1-v/top)}
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Chart of sourced values">';
+  [0,0.5,1].forEach(function(f){
+    var v=top*f,y=Y(v);
+    s+='<line x1="'+L+'" y1="'+y+'" x2="'+(L+pw)+'" y2="'+y+'" style="stroke:var(--line);stroke-width:1"/>';
+    s+='<text x="'+(L-6)+'" y="'+(y+3)+'" text-anchor="end" font-size="10" style="fill:var(--muted)">'+v.toLocaleString()+'</text>';
+  });
+  var n=pts.length,slot=pw/n,bw=Math.min(70,slot*0.6);
+  pts.forEach(function(p,i){
+    var cx=L+slot*(i+0.5),y=Y(p[1]);
+    s+='<rect x="'+(cx-bw/2)+'" y="'+y+'" width="'+bw+'" height="'+(T+ph-y)+'" rx="3" style="fill:var(--accent)"/>';
+    s+='<text x="'+cx+'" y="'+(y-5)+'" text-anchor="middle" font-size="11" font-weight="600" style="fill:var(--text)">'+p[1].toLocaleString()+'</text>';
+    s+='<text x="'+cx+'" y="'+(T+ph+16)+'" text-anchor="middle" font-size="10" style="fill:var(--muted)">'+p[0]+'</text>';
+  });
+  s+='<text transform="rotate(-90 12 '+(T+ph/2)+')" x="12" y="'+(T+ph/2)+'" text-anchor="middle" font-size="10" style="fill:var(--muted)">'+esc(yLabel)+'</text>';
+  s+='<text x="'+(L+pw/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" style="fill:var(--muted)">'+esc(xLabel)+'</text>';
+  return s+'</svg>';
+}
+function srcLine(pts){return pts.map(function(p){return p[0]+": "+p[2]}).join("; ")}
+
+var SHOWEX=false;
+function renderBenefits(){
+  var name=el("benTree").value;
+  var q=BEN[name]||{k:0.1,t0:22};
+  var d=SOURCED[name];
+  var note=el("benNote"), cs=el("benCarbonSrc"), rs=el("benRunoffSrc");
+  if(d){
+    el("benT1").textContent="Net CO2 reduced per year";
+    el("benS1").textContent=d.carbon.unit;
+    el("benT2").textContent="Rainfall intercepted per year";
+    el("benS2").textContent=d.water.unit;
+    note.innerHTML="<b>Sourced values.</b> "+d.who+" These are modeled estimates for a representative tree, not measurements of a specific planting.";
+    el("benCarbon").innerHTML=barChart(d.carbon.pts,"Net CO2 reduced (lb/yr)","Age of tree (years after planting)");
+    el("benRunoff").innerHTML=barChart(d.water.pts,"Rainfall intercepted (gal/yr)","Age of tree (years after planting)");
+    cs.innerHTML="Source: "+GUIDE+". "+srcLine(d.carbon.pts)+".";
+    rs.innerHTML="Source: "+GUIDE+". "+srcLine(d.water.pts)+". Rainfall intercepted is not the same as avoided runoff.";
+    el("benLegend").style.display="none";
+    return;
+  }
+  el("benT1").textContent="Carbon stored in the tree";
+  el("benS1").textContent="Rises as the tree grows";
+  el("benT2").textContent="Stormwater runoff from the site";
+  el("benS2").textContent="With and without the tree";
+  if(SHOWEX){
+    note.innerHTML='<b>Illustrative example, not data.</b> The curves show the idea only, which is why the axes have no numbers. Real charts appear only for trees with sourced estimates. <button class="mini" id="exBtn">Hide example</button>';
+    el("benCarbon").innerHTML=svgChart([
+      {color:"var(--accent)",f:function(t){return 0.02+0.9*growthCurve(t,q.k,q.t0)}}
+    ]);
+    el("benRunoff").innerHTML=svgChart([
+      {color:"var(--muted)",dash:true,f:function(t){return 0.9}},
+      {color:"var(--accent)",f:function(t){return 0.9-0.4*growthCurve(t,q.k,q.t0)}}
+    ]);
+    cs.textContent="Example only. No source.";
+    rs.textContent="Example only. No source.";
+    el("benLegend").style.display="flex";
+  } else {
+    note.innerHTML='<b>No sourced estimates yet for this tree.</b> A chart appears here only when sourced values are in the database, each with its citation. <button class="mini" id="exBtn">Show illustrative example</button>';
+    var empty='<div class="cn" style="padding:48px 8px;text-align:center">No sourced estimate recorded for this tree yet.</div>';
+    el("benCarbon").innerHTML=empty;
+    el("benRunoff").innerHTML=empty;
+    cs.textContent="Source: none recorded.";
+    rs.textContent="Source: none recorded.";
+    el("benLegend").style.display="none";
+  }
+  el("exBtn").onclick=function(){SHOWEX=!SHOWEX;renderBenefits();};
+}
+(function(){
+  var sel=el("benTree");
+  PLANTS.filter(function(p){return p.t==="Tree"}).forEach(function(p){
+    var o=document.createElement("option");o.value=p.b;o.textContent=p.c+" ("+p.b+")";sel.appendChild(o);
+  });
+  sel.addEventListener("change",renderBenefits);
+  renderBenefits();
+})();
+
+renderSaved();
+render();
+</script>
+</body>
+</html>
